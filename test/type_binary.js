@@ -4,7 +4,11 @@ const expect = require('chai').expect;
 const Converter = require('../lib/converter'),
 	inst = new Converter;
 
-const convert = thing => inst.convert(thing);
+const convert = thing => inst.convert(thing),
+	fakeJoi = thing => ({
+		isJoi: true,
+		describe: () => thing
+	});
 
 
 describe('type: binary', function() {
@@ -39,5 +43,9 @@ describe('type: binary', function() {
 
 	it('explicitly does not support features', function() {
 		expect(() => convert(Joi.binary().encoding('ucs2'))).to.throw();
+		expect(() => convert(fakeJoi({
+			type: 'binary',
+			rules: [{name: 'unknown'}]
+		}))).to.throw();
 	});
 })

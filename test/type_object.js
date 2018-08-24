@@ -5,7 +5,12 @@ const Converter = require('../lib/converter'),
 	inst = new Converter;
 
 const convert = thing => inst.convert(thing),
-	throwConvert = thing => expect(() => convert(thing)).to.throw();
+	throwConvert = thing => expect(() => convert(thing)).to.throw(),
+	fakeJoi = thing => ({
+		isJoi: true,
+		describe: () => thing
+	});
+
 
 describe('type: object', function() {
 	it('works', function() {
@@ -34,6 +39,39 @@ describe('type: object', function() {
 		expect(result.properties).to.exist;
 		expect(result.properties.a).to.exist;
 		expect(result.properties.a.type).to.eql('number');
+	});
+
+	it('supports unknown', function() {
+		let result = convert(Joi.object());
+		expect(result.additionalProperties).to.not.exist;
+
+		result = convert(Joi.object().unknown());
+		expect(result.additionalProperties).to.eql(true);
+
+		result = convert(Joi.object().unknown(false));
+		expect(result.additionalProperties).to.eql(false);
+	});
+
+	it('ignores unknown types', function() {
+		const inst = new Converter({ignoreUnknownTypes: true}),
+			result = inst.convert(fakeJoi({
+				type: 'object',
+				children: {
+					'test': {
+						type: 'foo'
+					}
+				},
+				patterns: [
+					{regex: '/test/', rule: {type: 'foo'}}
+				]
+			}));
+
+		expect(result).to.exist;
+		expect(result.type).to.eql('object');
+		expect(result.properties).to.exist;
+		expect(result.properties.test).to.not.exist;
+		expect(result.patternProperties).to.exist;
+		expect(result.patternProperties['test']).to.not.exist;
 	});
 
 	it('supports required and forbidden', function() {
@@ -69,5 +107,9 @@ describe('type: object', function() {
 	it('explicitly does not support features', function() {
 		throwConvert(Joi.object().pattern(Joi.string().min(3).max(5), Joi.boolean()));
 		throwConvert(Joi.object().or('a', 'b'));
+		throwConvert(fakeJoi({
+			type: 'object',
+			rules: [{name: 'unknown'}]
+		}));
 	});
 })

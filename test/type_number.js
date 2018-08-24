@@ -4,7 +4,12 @@ const expect = require('chai').expect;
 const Converter = require('../lib/converter'),
 	inst = new Converter;
 
-const convert = thing => inst.convert(thing);
+const convert = thing => inst.convert(thing),
+	fakeJoi = thing => ({
+		isJoi: true,
+		describe: () => thing
+	});
+
 
 describe('type: number', function() {
 	it('works', function() {
@@ -56,4 +61,11 @@ describe('type: number', function() {
 		expect(result.minimum).to.eql(0);
 		expect(result.maximum).to.eql(65535);
 	});
+
+	it('explicitly does not support features', function() {
+		expect(() => convert(fakeJoi({
+			type: 'number',
+			rules: [{name: 'unknown'}]
+		}))).to.throw();
+	})
 })

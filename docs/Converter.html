@@ -58,7 +58,7 @@
 
     
 
-    <h4 class="name" id="Converter"><span class="type-signature"></span>new Converter<span class="signature">(opts<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Converter"><span class="type-signature"></span>new Converter<span class="signature">(opts<span class="signature-attributes">opt</span>, schemas<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -70,7 +70,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="converter.js.html">converter.js</a>, <a href="converter.js.html#line27">line 27</a>
+        <a href="converter.js.html">converter.js</a>, <a href="converter.js.html#line36">line 36</a>
     </li></ul></dd>
     
 
@@ -337,6 +337,48 @@ This should be <code>ipv4</code> or <code>ipv6</code>.</p></td>
 
         <tr>
             
+                <td class="name"><code>extract</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>When true, sub-trees with <code>extract</code>
+metadata will be extracted from the output of <a href="Converter.html#convert"><code>Converter#convert</code></a> and stored
+within <code>Converter#schemas</code> while <code>$ref</code>s are inserted into their previous
+positions.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>extractPath</code></td>
             
 
@@ -364,11 +406,13 @@ This should be <code>ipv4</code> or <code>ipv6</code>.</p></td>
             
                 <td class="default">
                 
+                    <code>"/"</code>
+                
                 </td>
             
 
-            <td class="description last"><p>If this value is set, <a href="Converter.html#convert"><code>Converter#convert</code></a>
-will extract sub-trees from the generated schema and store them on
+            <td class="description last"><p>An optional prefix to append to <code>extract</code> when
+extracting sub-trees from generated schema.
 <code>Converter#schemas</code>, placing references in the generated schema instead.</p></td>
         </tr>
 
@@ -460,6 +504,40 @@ skip objects with unknown types rather than throwing an error.</p></td>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>schemas</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>A tree of schematics for use with references. This will be
+populated as schemas with names are converted.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -514,7 +592,7 @@ skip objects with unknown types rather than throwing an error.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="converter.js.html">converter.js</a>, <a href="converter.js.html#line91">line 91</a>
+        <a href="converter.js.html">converter.js</a>, <a href="converter.js.html#line113">line 113</a>
     </li></ul></dd>
     
 
@@ -560,8 +638,8 @@ most of Joi, throwing errors when it encounters something it is
 unable to handle.</p>
 <p>Metadata is passed through directly to the resulting object. Other
 data is passed through type-specific handlers.</p>
-<p>If a Joi object has attached <code>className</code> metadata, and the <a href="Converter.html"><code>Converter</code></a>
-instance has a set <code>extractPath</code> option,  the resulting schema will be
+<p>If a Joi object has attached <code>extract</code> metadata, and the <a href="Converter.html"><code>Converter</code></a>
+instance has extraction enabled, the resulting schema will be
 extracted from the tree and placed into <code>Converter#schemas</code>.
 A <code>$ref</code> will be inserted into the tree in its place.</p>
 </div>
@@ -583,11 +661,16 @@ A <code>$ref</code> will be inserted into the tree in its place.</p>
 //     "minLength": 3
 // }</code></pre>
 
-    <pre class="prettyprint"><code>my_converter.convert(Joi.object({
+    <pre class="prettyprint"><code>const my_converter = new Converter({
+    extract: true,
+    extractPath: '/components/schemas/'
+});
+
+my_converter.convert(Joi.object({
     bar: Joi.string()
 }).meta({
-    className: 'Foo'
-}))
+    extract: 'Foo'
+}));
 
 // {
 //     "$ref": "#/components/schemas/Foo"
@@ -597,10 +680,14 @@ A <code>$ref</code> will be inserted into the tree in its place.</p>
 my_converter.schemas
 
 // {
-//     Foo: {
-//         type: 'object',
-//         properties: {
-//             bar: {type: 'string'}
+//     components: {
+//         schemas: {
+//             Foo: {
+//                 type: 'object',
+//                 properties: {
+//                     bar: {type: 'string'}
+//                 }
+//             }
 //         }
 //     }
 // }</code></pre>
@@ -744,7 +831,7 @@ an error is thrown.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Aug 24 2018 01:16:58 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Aug 24 2018 16:52:00 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

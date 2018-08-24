@@ -4,7 +4,11 @@ const expect = require('chai').expect;
 const Converter = require('../lib/converter'),
 	inst = new Converter;
 
-const convert = thing => inst.convert(thing);
+const convert = thing => inst.convert(thing),
+	fakeJoi = thing => ({
+		isJoi: true,
+		describe: () => thing
+	});
 
 describe('type: date', function() {
 	it('works', function() {
@@ -34,7 +38,11 @@ describe('type: date', function() {
 		expect(result.formatExclusiveMaximum).to.eql('9999-12-31T00:00:00.000Z');
 	});
 
-	it('does not support timestamp', function() {
+	it('explicitly does not support features', function() {
 		expect(() => convert(Joi.date().timestamp())).to.throw();
+		expect(() => convert(fakeJoi({
+			type: 'date',
+			rules: [{name: 'unknown'}]
+		}))).to.throw();
 	})
 })

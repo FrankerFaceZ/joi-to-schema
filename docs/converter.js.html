@@ -43,6 +43,9 @@
         <article>
             <pre class="prettyprint source linenums"><code>'use strict';
 
+const set = require('lodash.set');
+const get = require('lodash.get');
+
 const TYPES = require('./types');
 
 module.exports = Converter;
@@ -55,27 +58,37 @@ module.exports = Converter;
  * @param {Object} [opts.types] Custom handlers for different Joi types.
  * @param {String} [opts.ipFormat=ipv4] The specific format for IP formatted strings.
  * This should be `ipv4` or `ipv6`.
- * @param {String} [opts.extractPath] If this value is set, {@link Converter#convert}
- * will extract sub-trees from the generated schema and store them on
+ * @param {Boolean} [opts.extract=false] When true, sub-trees with `extract`
+ * metadata will be extracted from the output of {@link Converter#convert} and stored
+ * within {@link Converter#schemas} while `$ref`s are inserted into their previous
+ * positions.
+ * @param {String} [opts.extractPath="/"] An optional prefix to append to `extract` when
+ * extracting sub-trees from generated schema.
  * {@link Converter#schemas}, placing references in the generated schema instead.
  * @param {Boolean} [opts.ignoreUnknownRules=false] If this is true, the converter will
  * skip rules with unknown names rather than throwing an error.
  * @param {Boolean} [opts.ignoreUnknownTypes=false] If this is true, the converter will
  * skip objects with unknown types rather than throwing an error.
+ * @param {Object} [schemas] A tree of schematics for use with references. This will be
+ * populated as schemas with names are converted.
  *
  * @property {Object} schemas Any sub-trees that are extracted from schemas generated
  * with {@link Converter#convert} will be stored on this object for easy access
  * and re-use.
  */
-function Converter(opts) {
+function Converter(opts, schemas) {
 	if ( !(this instanceof Converter) )
 		return new Converter(opts);
 
 	this.opts = opts || {};
 	this.opts.ipFormat = this.opts.ipFormat || 'ipv4';
 	this.opts.types = this.opts.types || {};
+	this.opts.extractPath = this.opts.extractPath || '/';
 
-	this.schemas = {};
+	if ( ! this.opts.extractPath.startsWith('/') )
+		throw new Error('opts.extractPath must start with "/"');
+
+	this.schemas = schemas || {};
 }
 
 
@@ -88,8 +101,8 @@ function Converter(opts) {
  * Metadata is passed through directly to the resulting object. Other
  * data is passed through type-specific handlers.
  *
- * If a Joi object has attached `className` metadata, and the {@link Converter}
- * instance has a set `extractPath` option,  the resulting schema will be
+ * If a Joi object has attached `extract` metadata, and the {@link Converter}
+ * instance has extraction enabled, the resulting schema will be
  * extracted from the tree and placed into {@link Converter#schemas}.
  * A `$ref` will be inserted into the tree in its place.
  *
@@ -102,11 +115,16 @@ function Converter(opts) {
  * // }
  *
  * @example
+ * const my_converter = new Converter({
+ *     extract: true,
+ *     extractPath: '/components/schemas/'
+ * });
+ *
  * my_converter.convert(Joi.object({
  *     bar: Joi.string()
  * }).meta({
- *     className: 'Foo'
- * }))
+ *     extract: 'Foo'
+ * }));
  *
  * // {
  * //     "$ref": "#/components/schemas/Foo"
@@ -116,10 +134,14 @@ function Converter(opts) {
  * my_converter.schemas
  *
  * // {
- * //     Foo: {
- * //         type: 'object',
- * //         properties: {
- * //             bar: {type: 'string'}
+ * //     components: {
+ * //         schemas: {
+ * //             Foo: {
+ * //                 type: 'object',
+ * //                 properties: {
+ * //                     bar: {type: 'string'}
+ * //                 }
+ * //             }
  * //         }
  * //     }
  * // }
@@ -166,15 +188,24 @@ Converter.prototype._convert = function(thing) {
 
 	let out = {};
 
+	if ( thing.meta )
+		out.meta = Object.assign({}, ...thing.meta);
+
+	const extract_name = this.opts.extract &amp;&amp; out.meta &amp;&amp; out.meta.extract,
+		path = extract_name &amp;&amp; (extract_name.startsWith('/') ? extract_name : this.opts.extractPath + extract_name),
+		split_path = path &amp;&amp; path.slice(1).split('/');
+
+	if ( extract_name &amp;&amp; get(this.schemas, split_path) )
+		return {
+			'$ref': `#${path}`
+		}
+
 	if ( thing.valids.includes(null) )
 		out.nullable = true;
 
 	if ( thing.flags.allowOnly &amp;&amp; thing.valids.length ) {
 		out.enum = thing.valids.filter(x => x !== null);
 	}
-
-	if ( thing.meta )
-		out.meta = Object.assign({}, ...thing.meta);
 
 	if ( thing.notes ) {
 		const meta = out.meta = out.meta || {};
@@ -189,11 +220,6 @@ Converter.prototype._convert = function(thing) {
 	if ( thing.unit ) {
 		const meta = out.meta = out.meta || {};
 		meta.unit = thing.unit;
-	}
-
-	if ( thing.flags.presence ) {
-		const meta = out.meta = out.meta || {};
-		meta.presence = thing.flags.presence;
 	}
 
 	if ( thing.examples )
@@ -212,16 +238,12 @@ Converter.prototype._convert = function(thing) {
 	if ( ! out )
 		return;
 
-	if ( this.opts.extractPath &amp;&amp; out.meta &amp;&amp; out.meta.className ) {
-		const name = out.meta.className,
-			path = name.startsWith('/') ? name : this.opts.extractPath + name;
-
-		delete out.meta.className;
+	if ( extract_name ) {
+		delete out.meta.extract;
 		if ( ! Object.keys(out.meta).length )
 			delete out.meta;
 
-		this.schemas[name] = out;
-
+		set(this.schemas, split_path, out);
 		return {
 			'$ref': `#${path}`
 		}
@@ -243,7 +265,7 @@ Converter.prototype._convert = function(thing) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Aug 24 2018 01:16:58 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Aug 24 2018 16:52:00 GMT-0400 (Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

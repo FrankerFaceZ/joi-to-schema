@@ -85,4 +85,23 @@ describe('basics', function() {
 		const result = convert(Joi.number().default(42));
 		expect(result.default).to.eql(42);
 	});
+
+	it('supports custom types', function() {
+		const inst = new Converter({
+			types: {
+				foo: (thing, out) => {
+					out.type = 'bar';
+					return out;
+				},
+				baz: () => null
+			}
+		});
+
+		let result = inst.convert(fakeJoi({type: 'foo'}));
+		expect(result).to.exist;
+		expect(result.type).to.eql('bar');
+
+		result = inst.convert(fakeJoi({type: 'baz'}));
+		expect(result).to.not.exist;
+	})
 });

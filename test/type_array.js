@@ -4,7 +4,12 @@ const expect = require('chai').expect;
 const Converter = require('../lib/converter'),
 	inst = new Converter;
 
-const convert = thing => inst.convert(thing);
+const convert = thing => inst.convert(thing),
+	fakeJoi = thing => ({
+		isJoi: true,
+		describe: () => thing
+	});
+
 
 describe('type: array', function() {
 	it('works', function() {
@@ -83,5 +88,9 @@ describe('type: array', function() {
 		expect(() => convert(Joi.array().sparse())).to.throw();
 		expect(() => convert(Joi.array().unique(() => {}))).to.throw();
 		expect(() => convert(Joi.array().unique(undefined, {ignoreUndefined: true}))).to.throw();
+		expect(() => convert(fakeJoi({
+			type: 'array',
+			rules: [{name: 'unknown'}]
+		}))).to.throw();
 	});
 })

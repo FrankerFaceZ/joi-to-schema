@@ -53,6 +53,57 @@ converter.convert(Joi.object({
 }))
 ```
 
+## Schema Extraction
+
+This library supports extracting sub-trees from converted schematics and storing
+them in a central location. To enable this behavior, you need to pass an option
+to the `Converter` to allow extraction.
+
+```javascript
+const converter = new Converter({
+    extract: true
+});
+```
+
+Then, you attach `extract` metadata to the part of your schema that you would like
+to extract. This will result in that sub-tree of the output being extracted and stored in `converter.schemas` while a reference will be saved into the generated schema.
+
+```javascript
+const converter = new Converter({
+    extract: true,
+    extractPath: '/components/schemas/'
+})
+
+converter.convert(Joi.object({
+    height: Joi.number().integer().positive().required(),
+    width: Joi.number().integer().positive().required(),
+    urls: Joi.object({
+        '1x': Joi.string().uri().required(),
+        '2x': Joi.string().uri(),
+        '4x': Joi.string().uri()
+    }).required()
+}).meta({
+    extract: 'HighDPIImage'
+}));
+
+// {
+//     '$ref': '#/components/schemas/HighDPIImage
+// }
+
+
+converter.schemas
+
+// {
+//     components: {
+//         schemas: {
+//             HighDPIImage: {
+//                 ...
+//             }
+//         }
+//     }
+// }
+```
+
 ## Tests
 
 Run tests using `npm test`.
