@@ -29,7 +29,7 @@
 		"test-watch": "cross-env NODE_ENV=test nodemon node_modules/mocha/bin/mocha",
 		"test": "cross-env NODE_ENV=test nyc mocha --",
 		"test-bare": "cross-env NODE_ENV=test mocha",
-		"coverage": "nyc report --reporter=test-lconv | coveralls",
+		"coverage": "nyc report --reporter=text-lcov | coveralls",
 		"docs": "rimraf docs && jsdoc -c jsdoc.json"
 	},
 	"devDependencies": {
