@@ -1,0 +1,26 @@
+{
+	"source": {
+		"include": ["README.md", "lib"],
+		"exclude": ["node_modules"]
+	},
+	"plugins": [
+		"plugins/markdown"
+	],
+	"opts": {
+		"template": "node_modules/docdash",
+		"destination": "./docs/",
+		"recurse": true,
+		"verbose": true
+	},
+	"templates": {
+		"cleverLinks": true
+	},
+	"docdash": {
+		"typedefs": true,
+		"menu": {
+			"GitHub": {
+				"href": "https://github.com/FrankerFaceZ/joi-to-schema"
+			}
+		}
+	}
+}
