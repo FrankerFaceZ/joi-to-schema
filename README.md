@@ -24,8 +24,6 @@ This library does not support:
     It's theoretically possible to support `when()` but the code complexity and
     my lack of any use-cases for it made me shy away for now.
 
--
-
 * * *
 
 ## Install
