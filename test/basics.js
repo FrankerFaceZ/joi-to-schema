@@ -1,4 +1,4 @@
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const expect = require('chai').expect;
 
 const Converter = require('../lib/converter'),
@@ -67,7 +67,7 @@ describe('basics', function() {
 	});
 
 	it('preserves examples', function() {
-		const result = convert(Joi.string().example('foo').example('bar'));
+		const result = convert(Joi.string().example('foo', 'bar'));
 		expect(result.examples).to.eql(['foo', 'bar']);
 	});
 

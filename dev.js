@@ -1,7 +1,7 @@
 'use strict';
 
 const Converter = require('./lib/converter');
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 
 const inst = new Converter;
 

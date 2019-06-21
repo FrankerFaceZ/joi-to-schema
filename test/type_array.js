@@ -1,4 +1,4 @@
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const expect = require('chai').expect;
 
 const Converter = require('../lib/converter'),
@@ -82,15 +82,47 @@ describe('type: array', function() {
 		expect(result.additionalItems.anyOf.length).to.eql(2);
 		expect(result.additionalItems.anyOf[0]).to.eql({type: 'integer'});
 		expect(result.additionalItems.anyOf[1]).to.eql({type: 'boolean'});
-	})
+	});
+
+	it('ignores unknown types', function() {
+		const inst = new Converter({ignoreUnknownTypes: true}),
+			result = inst.convert(fakeJoi({
+				type: 'array',
+				items: [
+					{type: 'string'},
+					{type: 'foo'}
+				]
+			})),
+
+			result_two = inst.convert(fakeJoi({
+				type: 'array',
+				orderedItems: [
+					{type: 'foo'},
+					{type: 'number'}
+				]
+			}));
+
+		expect(result).to.exist;
+		expect(result.items).to.eql({type: 'string'});
+
+		expect(result_two).to.exist;
+		expect(result_two.items).to.exist;
+		expect(result_two.items.length).to.eql(1);
+		expect(result_two.items[0]).to.eql({type: 'number'});
+	});
 
 	it('explicitly does not support features', function() {
 		expect(() => convert(Joi.array().sparse())).to.throw();
 		expect(() => convert(Joi.array().unique(() => {}))).to.throw();
 		expect(() => convert(Joi.array().unique(undefined, {ignoreUndefined: true}))).to.throw();
-		expect(() => convert(fakeJoi({
+
+		const inst = new Converter({ignoreUnknownRules: true});
+		const bad_rule = fakeJoi({
 			type: 'array',
 			rules: [{name: 'unknown'}]
-		}))).to.throw();
+		});
+
+		expect(() => convert(bad_rule)).to.throw();
+		expect(() => inst.convert(bad_rule)).to.not.throw();
 	});
 })
