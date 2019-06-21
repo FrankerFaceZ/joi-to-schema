@@ -20,9 +20,5 @@
 
 	"eslint.validate": [
 		"javascript"
-	],
-
-	"mocha.sideBarOptions": {
-		"lens": false
-	}
+	]
 }
