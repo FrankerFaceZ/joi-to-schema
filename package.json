@@ -1,6 +1,6 @@
 {
 	"name": "@ffz/joi-to-schema",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Conversion library for transforming Joi schema into JSON schema.",
 	"license": "MIT",
 	"main": "lib/converter.js",
