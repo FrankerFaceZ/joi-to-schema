@@ -49,13 +49,25 @@ describe('basics', function() {
 	});
 
 	it('preserves notes on meta', function() {
-		const result = convert(Joi.object().notes('test').notes('another'));
+		let obj = Joi.object();
+		if ( obj.notes )
+			obj = obj.notes('test').notes('another');
+		else
+			obj = obj.note('test').note('another');
+
+		const result = convert(obj);
 		expect(result.meta).to.exist;
 		expect(result.meta.notes).to.eql(['test', 'another']);
 	});
 
 	it('preserves tags on meta', function() {
-		const result = convert(Joi.object().tags(['test']).tags(['foo', 'bar']));
+		let obj = Joi.object();
+		if ( obj.tags )
+			obj = obj.tags(['test']).tags(['foo', 'bar']);
+		else
+			obj = obj.tag('test').tag('foo', 'bar');
+
+		const result = convert(obj);
 		expect(result.meta).to.exist;
 		expect(result.meta.tags).to.eql(['test', 'foo', 'bar']);
 	});
@@ -67,7 +79,7 @@ describe('basics', function() {
 	});
 
 	it('preserves examples', function() {
-		const result = convert(Joi.string().example('foo', 'bar'));
+		const result = convert(Joi.string().example('foo').example('bar'));
 		expect(result.examples).to.eql(['foo', 'bar']);
 	});
 

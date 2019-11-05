@@ -33,7 +33,7 @@
 		"docs": "rimraf docs && jsdoc -c jsdoc.json"
 	},
 	"devDependencies": {
-		"@hapi/joi": "^15.0.3",
+		"@hapi/joi": "^16.1.7",
 		"chai": "^4.2.0",
 		"coveralls": "^3.0.4",
 		"cross-env": "^5.2.0",
