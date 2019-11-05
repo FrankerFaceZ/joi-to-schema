@@ -67,8 +67,11 @@ describe('basics', function() {
 	});
 
 	it('preserves examples', function() {
-		const result = convert(Joi.string().example('foo', 'bar'));
+		let result = convert(Joi.string().example('foo', 'bar'));
 		expect(result.examples).to.eql(['foo', 'bar']);
+
+		result = convert(Joi.string().example('foo'));
+		expect(result.example).to.eql('foo');
 	});
 
 	it('preserves label', function() {
